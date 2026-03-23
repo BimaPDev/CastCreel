@@ -1,0 +1,44 @@
+# CastCreel AI Service — Python dependencies
+
+# Web framework and server
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.1
+
+# gRPC (for the binary transport option)
+grpcio==1.64.1
+grpcio-tools==1.64.1   # used to compile .proto files into Python code
+
+# HTTP client (for calling external APIs from the ingest modules)
+requests==2.32.3
+httpx==0.27.0          # async-friendly alternative to requests
+
+# Feed parsing (RSS and Atom feeds from wildlife agencies)
+feedparser==6.0.11
+
+# PDF parsing (for agencies that still publish stocking schedules as PDFs)
+pdfplumber==0.11.1
+
+# Computer vision — starting point before final model selection
+Pillow==10.3.0          # image loading and basic manipulation
+opencv-python==4.9.0.80 # image processing utilities
+
+# ML / model inference
+transformers==4.41.2    # Hugging Face transformers for species classification
+numpy==1.26.4
+scikit-learn==1.5.0     # used for the prediction and weighting models
+
+# NOTE: torch (PyTorch) is intentionally not listed here yet.
+# Add it once the final vision model architecture is decided.
+# Example (CPU-only): torch==2.3.0+cpu
+# Example (CUDA):     torch==2.3.0+cu121
+
+# Background job scheduler
+APScheduler==3.10.4
+
+# Database (connecting to PostgreSQL for the ingest and notification jobs)
+sqlalchemy==2.0.30
+psycopg2-binary==2.9.9
+
+# Utility
+python-dotenv==1.0.1    # load .env file in development

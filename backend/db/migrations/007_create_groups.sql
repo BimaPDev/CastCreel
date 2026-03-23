@@ -1,0 +1,11 @@
+-- Migration 007: Create the groups table
+--
+-- Groups are communities of anglers who share catches with each other.
+-- This table stores the group's identity and settings. Membership rows
+-- live in the separate group_members table (migration 008).
+--
+-- TODO: Add the actual CREATE TABLE statement here when implementing.
+-- Note: Add a foreign key from created_by to users(id).
+-- Note: Add a unique index on invite_code so the lookup in JoinByInviteCode is fast.
+-- Note: Consider a GIN index on (name, description) for the full-text search
+--       used by SearchPublicGroups.

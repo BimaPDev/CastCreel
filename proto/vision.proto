@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package castcreel;
+
+option go_package = "castcreel/backend/proto/vision";
+
+// VisionService handles fish photo analysis.
+// The Go backend sends raw image bytes; Python runs the computer vision model
+// and returns species identification, color, body condition, and size.
+service VisionService {
+  // DetectFish takes a fish photo and returns the identified species,
+  // dominant color, body condition, and an estimated size if measurable.
+  rpc DetectFish (DetectFishRequest) returns (DetectFishResponse);
+
+  // EstimateSize takes a fish photo and returns just the size estimate.
+  // Exposed separately in case size-only is needed without full detection.
+  rpc EstimateSize (EstimateSizeRequest) returns (EstimateSizeResponse);
+}
+
+// DetectFishRequest carries the raw image bytes and the requesting user's ID.
+message DetectFishRequest {
+  bytes image_data = 1;
+  int64 user_id = 2;
+}
+
+// DetectFishResponse is what comes back from species detection.
+message DetectFishResponse {
+  string species = 1;
+  string dominant_color = 2;
+  string body_condition = 3;
+
+  // Length in centimeters. The has_length flag tells the caller whether
+  // a reliable measurement was possible — if false, the length value is zero
+  // and should not be displayed to the user.
+  bool has_length = 4;
+  double estimated_length_cm = 5;
+
+  // How confident the vision model is in the species identification.
+  double confidence_score = 6;
+}
+
+// EstimateSizeRequest just needs the image bytes.
+message EstimateSizeRequest {
+  bytes image_data = 1;
+  string species = 2;   // helps calibrate the estimate if already known
+}
+
+// EstimateSizeResponse returns only the size result.
+message EstimateSizeResponse {
+  bool has_length = 1;
+  double estimated_length_cm = 2;
+  double confidence_score = 3;
+}

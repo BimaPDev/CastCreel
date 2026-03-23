@@ -1,0 +1,13 @@
+-- Migration 009: Create the join_requests table
+--
+-- Tracks pending, accepted, and declined requests to join private groups.
+-- When an admin or moderator accepts a request, a row is written to
+-- group_members and the status here is updated to "accepted".
+--
+-- TODO: Add the actual CREATE TABLE statement here when implementing.
+-- Note: Add foreign keys to groups(id) and users(id).
+-- Note: Add a unique constraint on (group_id, user_id) so a user cannot
+--       submit multiple pending requests for the same group.
+-- Note: Add a partial index on (group_id, status) WHERE status = 'pending'
+--       to make the admin dashboard query for pending requests fast.
+-- Note: Add a check constraint on status to enforce ('pending', 'accepted', 'declined').

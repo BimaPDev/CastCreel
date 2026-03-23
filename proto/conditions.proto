@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package castcreel;
+
+option go_package = "castcreel/backend/proto/conditions";
+
+// ConditionsService handles requests to fetch environmental data for a location.
+// When a user logs a catch, the Go backend asks the Python service to look up
+// all the conditions (weather, pressure, moon phase, etc.) at that GPS point
+// and time so everything can be saved alongside the catch automatically.
+service ConditionsService {
+  // FetchConditions returns all environmental data for a given location and time.
+  rpc FetchConditions (ConditionsRequest) returns (ConditionsResponse);
+}
+
+// ConditionsRequest specifies the location and time to fetch data for.
+message ConditionsRequest {
+  double latitude = 1;
+  double longitude = 2;
+
+  // The timestamp to fetch conditions for, as an ISO 8601 string.
+  // For a catch being logged right now, this is the current time.
+  string timestamp = 3;
+}
+
+// ConditionsResponse holds all the environmental data returned by Python.
+message ConditionsResponse {
+  string weather_condition = 1;
+  double air_temp_celsius = 2;
+
+  // Water temperature may not be available for all locations.
+  bool has_water_temp = 3;
+  double water_temp_celsius = 4;
+
+  double barometric_pressure_hpa = 5;
+
+  // Whether pressure has been rising, falling, or staying steady.
+  // One of: "rising", "falling", "steady"
+  string pressure_trend = 6;
+
+  double wind_speed_kmh = 7;
+  string wind_direction = 8;
+
+  // Moon phase name, e.g. "full moon", "waning crescent".
+  string moon_phase = 9;
+
+  // Whether a solunar feeding period is active.
+  // One of: "major", "minor", or empty string if not in a period.
+  string solunar_period = 10;
+}

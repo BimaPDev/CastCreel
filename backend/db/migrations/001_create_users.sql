@@ -1,0 +1,9 @@
+-- Migration 001: Create the users table
+--
+-- This table stores every person who has registered an account.
+-- It holds their login credentials (hashed password, never plain text),
+-- their display name, home location for local news filtering,
+-- their favorite species for personalized predictions,
+-- and their push notification device token.
+--
+-- TODO: Add the actual CREATE TABLE statement here when implementing.

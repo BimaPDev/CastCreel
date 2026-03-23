@@ -1,0 +1,12 @@
+-- Migration 002: Create the catches table
+--
+-- This is the central table of the whole app. Every fish a user logs goes here.
+-- It stores the species, size, color, photo URL, GPS location, all the
+-- environmental conditions at the time of the catch, the visibility setting
+-- (private / friends / public), and the data quality weight (0.0 to 1.0)
+-- that the AI uses when training its prediction model.
+--
+-- TODO: Add the actual CREATE TABLE statement here when implementing.
+-- Note: Add a foreign key to the users table on user_id.
+-- Note: Create indexes on user_id, caught_at, species, and the GPS columns
+--       since those are the most common filter and sort fields.

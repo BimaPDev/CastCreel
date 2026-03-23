@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package castcreel;
+
+option go_package = "castcreel/backend/proto/prediction";
+
+// PredictionService handles requests from the Go backend for fishing advice.
+// The Go client sends the user's location and context; Python sends back
+// a prediction about what to fish for, when, and how.
+service PredictionService {
+  // GetPrediction takes a user's GPS location, planned date, and catch history
+  // count, and returns a full fishing prediction.
+  rpc GetPrediction (PredictionRequest) returns (PredictionResponse);
+}
+
+// PredictionRequest is what the Go backend sends when asking for a prediction.
+message PredictionRequest {
+  double latitude = 1;
+  double longitude = 2;
+
+  // The date/time the user plans to fish, as an ISO 8601 string.
+  string target_date = 3;
+
+  int64 user_id = 4;
+
+  // How many catches this user has logged. Used to decide how much
+  // personal vs. community data to blend into the prediction.
+  int32 user_catch_count = 5;
+}
+
+// PredictionResponse is what the Python AI service sends back.
+message PredictionResponse {
+  string top_species = 1;
+  string best_time_window = 2;
+  string recommended_bait = 3;
+  string technique = 4;
+
+  // How confident the model is, from 0.0 (guessing) to 1.0 (very sure).
+  double confidence_score = 5;
+
+  repeated string alternative_species = 6;
+
+  // Any additional notes the model wants to share (e.g. "pressure dropping,
+  // expect morning bite to be better than evening").
+  string notes = 7;
+}

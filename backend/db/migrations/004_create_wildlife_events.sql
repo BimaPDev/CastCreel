@@ -1,0 +1,13 @@
+-- Migration 004: Create the wildlife_events table
+--
+-- Stores every piece of news or data ingested from wildlife agencies —
+-- stocking events, regulation changes, water advisories, population surveys,
+-- and invasive species alerts. All events are normalized to a consistent shape
+-- regardless of where they came from (API, RSS feed, scraper, or PDF).
+-- The location and radius columns allow the notification job to do a simple
+-- geographic proximity check to find affected users.
+--
+-- TODO: Add the actual CREATE TABLE statement here when implementing.
+-- Note: Add an index on (event_type, occurred_at) for efficient news feed queries.
+-- Note: Add a spatial index or PostGIS geometry column on the location fields
+--       if geographic queries become a performance bottleneck.

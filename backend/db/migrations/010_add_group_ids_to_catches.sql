@@ -1,0 +1,34 @@
+-- Migration 010: Add group association to catches
+--
+-- Connects catches to the groups they have been shared to, enabling the
+-- group visibility level introduced alongside groups in the app.
+--
+-- There are two ways to model this. Choose one before implementing:
+--
+-- OPTION A — PostgreSQL array column on catches:
+--   ALTER TABLE catches ADD COLUMN group_ids BIGINT[] NOT NULL DEFAULT '{}';
+--   Add a GIN index on group_ids for fast membership lookups:
+--   CREATE INDEX idx_catches_group_ids ON catches USING GIN (group_ids);
+--
+--   Pros:  Simple — one column, no extra JOIN for most queries.
+--   Cons:  Arrays are opaque to the query planner; referential integrity
+--          cannot be enforced with foreign keys; harder to query "all catches
+--          in group X" efficiently without the GIN index.
+--
+-- OPTION B — Separate catch_groups junction table:
+--   CREATE TABLE catch_groups (
+--     catch_id BIGINT NOT NULL REFERENCES catches(id) ON DELETE CASCADE,
+--     group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+--     PRIMARY KEY (catch_id, group_id)
+--   );
+--
+--   Pros:  Full referential integrity; easy to query in both directions
+--          (catches for a group, groups for a catch); scales cleanly.
+--   Cons:  Every group-visibility query needs a JOIN; slightly more
+--          complex insertion when logging a catch shared to multiple groups.
+--
+-- Recommendation: Start with Option B (junction table) for correctness and
+-- referential integrity. Migrate to Option A only if profiling reveals that
+-- the JOIN is a real bottleneck at scale.
+--
+-- TODO: Add the chosen CREATE TABLE or ALTER TABLE statement here when implementing.

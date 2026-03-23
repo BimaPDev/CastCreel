@@ -1,0 +1,18 @@
+-- Migration 005: Create the notifications and user_notification_preferences tables
+--
+-- Two tables in one migration since they are tightly related:
+--
+-- notifications: A log of every push notification sent to every user.
+-- Stores the title, body, type, related event ID, and whether it has been
+-- read. This powers the in-app notification inbox.
+--
+-- user_notification_preferences: One row per user, with boolean flags for
+-- each type of alert they can turn on or off (stocking, regulations,
+-- water advisories, friend catches, invasive species).
+-- Default value for all flags should be true (opted in by default).
+--
+-- TODO: Add both CREATE TABLE statements here when implementing.
+-- Note: Add a foreign key on notifications.user_id and
+--       user_notification_preferences.user_id to the users table.
+-- Note: Index notifications on (user_id, is_read, created_at) for fast
+--       inbox queries.

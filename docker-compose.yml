@@ -1,0 +1,98 @@
+version: "3.9"
+
+# CastCreel local development stack
+# Three backend services: Go backend, Python AI service, and PostgreSQL database.
+# All secrets come from a .env file — copy .env.example to .env and fill it in.
+#
+# FRONTENDS — neither frontend runs as a Docker service in development.
+# They connect directly to the backend container at localhost:8080.
+#
+#   Web (Vite dev server):
+#     cd frontend-web && npm install && npm run dev
+#     → Available at http://localhost:3000
+#     → Proxies /api/* requests to the Go backend (see vite.config.ts)
+#
+#   Mobile (Expo):
+#     cd frontend-mobile && npm install && npx expo start
+#     → Opens in Expo Go on your device or in a simulator
+#     → Set EXPO_PUBLIC_API_BASE_URL in .env to point at your machine's IP
+#       (e.g. http://192.168.1.x:8080) so the device can reach the backend
+
+services:
+
+  # -------------------------------------------------------------------------
+  # Go backend server
+  # Handles all API requests from the mobile app.
+  # -------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile   # TODO: create backend/Dockerfile
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRY_DURATION: ${JWT_EXPIRY_DURATION:-24h}
+      AI_TRANSPORT: ${AI_TRANSPORT:-http}
+      AI_SERVICE_HTTP_URL: http://ai-service:8000
+      AI_SERVICE_GRPC_URL: ai-service:50051
+      WILDLIFE_PARTNER_API_KEY: ${WILDLIFE_PARTNER_API_KEY}
+      RATE_LIMIT_REQUESTS_PER_SECOND: ${RATE_LIMIT_REQUESTS_PER_SECOND:-10}
+      RATE_LIMIT_BURST_SIZE: ${RATE_LIMIT_BURST_SIZE:-30}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Python AI service
+  # Runs FastAPI on port 8000 (REST) and gRPC on port 50051 simultaneously.
+  # Handles vision, predictions, environmental data, and background ingest jobs.
+  # -------------------------------------------------------------------------
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile   # TODO: create ai-service/Dockerfile
+    ports:
+      - "8000:8000"    # FastAPI REST
+      - "50051:50051"  # gRPC
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      WEATHER_API_KEY: ${WEATHER_API_KEY}
+      BAROMETRIC_PRESSURE_API_KEY: ${BAROMETRIC_PRESSURE_API_KEY}
+      WATER_TEMP_API_KEY: ${WATER_TEMP_API_KEY}
+      SOLUNAR_API_KEY: ${SOLUNAR_API_KEY}
+      PUSH_NOTIFICATION_SERVICE_KEY: ${PUSH_NOTIFICATION_SERVICE_KEY}
+      AI_SERVICE_PORT: "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # PostgreSQL database
+  # Shared by both the Go backend and the Python AI service.
+  # -------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: castcreel
+      POSTGRES_USER: ${POSTGRES_USER:-castcreel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-castcreel} -d castcreel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

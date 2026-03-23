@@ -1,0 +1,10 @@
+{
+  "name": "castcreel",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend-shared",
+    "frontend-web",
+    "frontend-mobile"
+  ]
+}

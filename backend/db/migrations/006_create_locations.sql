@@ -1,0 +1,10 @@
+-- Migration 006: Create the saved_locations table
+--
+-- Stores the fishing spots users have bookmarked for monitoring.
+-- Each row has a user-given name, GPS coordinates, and a radius in km.
+-- The notification job does a proximity check between new wildlife events
+-- and all saved locations to decide who to notify.
+--
+-- TODO: Add the actual CREATE TABLE statement here when implementing.
+-- Note: Add a foreign key on user_id to the users table.
+-- Note: Consider a partial index on user_id for fast per-user location lookups.
