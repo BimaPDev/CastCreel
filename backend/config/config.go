@@ -68,7 +68,24 @@ type Config struct {
 // a filled-in Config struct. If a required value is missing, it logs a warning
 // and uses a safe default so the app can still start in development.
 func Load() *Config {
-	return &Config{}
+	return &Config{
+		ServerPort:                 getEnv("SERVER_PORT", "8080"),
+		AppEnv:                     getEnv("APP_ENV", "development"),
+		DatabaseURL:                getEnv("DATABASE_URL", ""),
+		JWTSecret:                  getEnv("JWT_SECRET", ""),
+		JWTExpiryDuration:          getEnvDuration("JWT_EXPIRY_DURATION", 24*time.Hour),
+		AITransport:                getEnv("AI_TRANSPORT", "http"),
+		AIServiceHTTPURL:           getEnv("AI_SERVICE_HTTP_URL", "http://localhost:8000"),
+		AIServiceGRPCURL:           getEnv("AI_SERVICE_GRPC_URL", "localhost:50051"),
+		WeatherAPIKey:              getEnv("WEATHER_API_KEY", ""),
+		BarometricPressureAPIKey:   getEnv("BAROMETRIC_PRESSURE_API_KEY", ""),
+		WaterTempAPIKey:            getEnv("WATER_TEMP_API_KEY", ""),
+		SolunarAPIKey:              getEnv("SOLUNAR_API_KEY", ""),
+		WildlifePartnerAPIKey:      getEnv("WILDLIFE_PARTNER_API_KEY", ""),
+		PushNotificationServiceKey: getEnv("PUSH_NOTIFICATION_SERVICE_KEY", ""),
+		RateLimitRequestsPerSecond: getEnvFloat("RATE_LIMIT_REQUESTS_PER_SECOND", 10),
+		RateLimitBurstSize:         getEnvInt("RATE_LIMIT_BURST_SIZE", 30),
+	}
 }
 
 // getEnv is a small helper that reads an environment variable by name.
@@ -85,8 +102,19 @@ func getEnv(key, fallback string) string {
 // string (e.g. "24h" or "30m"). Falls back to the provided default if missing
 // or unparseable.
 func getEnvDuration(key string, fallback time.Duration) time.Duration {
-	_ = fallback
-	return 0
+	// Grab the value from the .env
+	val := os.Getenv(key)
+	// check if exist
+	if val == "" {
+		return fallback
+	}
+	// set D as the time duration using the value of "val"
+	d, err := time.ParseDuration(val)
+	//check if exist and fallback if not
+	if err != nil {
+		return fallback
+	}
+	return d
 }
 
 // getEnvFloat reads an environment variable and parses it as a decimal number.

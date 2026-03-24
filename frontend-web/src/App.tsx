@@ -29,5 +29,5 @@ import ProtectedRoute from './components/ProtectedRoute';
 // Everything else is wrapped in ProtectedRoute, which redirects to /login
 // if the user isn't authenticated.
 export default function App() {
-  return null;
+  return <div style={{ padding: 40, fontFamily: 'sans-serif' }}>CastCreel — coming soon</div>;
 }
