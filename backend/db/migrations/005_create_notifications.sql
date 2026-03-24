@@ -1,18 +1,22 @@
--- Migration 005: Create the notifications and user_notification_preferences tables
---
--- Two tables in one migration since they are tightly related:
---
--- notifications: A log of every push notification sent to every user.
--- Stores the title, body, type, related event ID, and whether it has been
--- read. This powers the in-app notification inbox.
---
--- user_notification_preferences: One row per user, with boolean flags for
--- each type of alert they can turn on or off (stocking, regulations,
--- water advisories, friend catches, invasive species).
--- Default value for all flags should be true (opted in by default).
---
--- TODO: Add both CREATE TABLE statements here when implementing.
--- Note: Add a foreign key on notifications.user_id and
---       user_notification_preferences.user_id to the users table.
--- Note: Index notifications on (user_id, is_read, created_at) for fast
---       inbox queries.
+CREATE TABLE notifications (
+    id               BIGSERIAL PRIMARY KEY,
+    user_id          BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type             TEXT NOT NULL CHECK (type IN ('stocking_alert', 'regulation_change', 'water_advisory', 'friend_catch', 'invasive_species')),
+    title            TEXT NOT NULL,
+    body             TEXT NOT NULL,
+    related_event_id BIGINT,
+    is_read          BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_user_inbox ON notifications (user_id, is_read, created_at DESC);
+
+CREATE TABLE user_notification_preferences (
+    user_id            BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    stocking_alerts    BOOLEAN NOT NULL DEFAULT TRUE,
+    regulation_changes BOOLEAN NOT NULL DEFAULT TRUE,
+    water_advisories   BOOLEAN NOT NULL DEFAULT TRUE,
+    friend_catches     BOOLEAN NOT NULL DEFAULT TRUE,
+    invasive_species   BOOLEAN NOT NULL DEFAULT TRUE,
+    updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

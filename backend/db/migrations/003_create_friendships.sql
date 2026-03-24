@@ -1,11 +1,9 @@
--- Migration 003: Create the friendships table
---
--- Tracks the social connections between users. Each row represents one
--- friend request — who sent it, who received it, and the current status
--- (pending, accepted, or declined). Once accepted, each user can see
--- the other's friend-visible catches.
---
--- TODO: Add the actual CREATE TABLE statement here when implementing.
--- Note: Add foreign keys to the users table for both requester_id and recipient_id.
--- Note: Add a unique constraint on (requester_id, recipient_id) so you can't
---       accidentally create duplicate friend requests between the same two people.
+CREATE TABLE friendships (
+    id           BIGSERIAL PRIMARY KEY,
+    requester_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    recipient_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status       TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (requester_id, recipient_id)
+);

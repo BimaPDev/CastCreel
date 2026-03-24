@@ -1,13 +1,19 @@
--- Migration 004: Create the wildlife_events table
---
--- Stores every piece of news or data ingested from wildlife agencies —
--- stocking events, regulation changes, water advisories, population surveys,
--- and invasive species alerts. All events are normalized to a consistent shape
--- regardless of where they came from (API, RSS feed, scraper, or PDF).
--- The location and radius columns allow the notification job to do a simple
--- geographic proximity check to find affected users.
---
--- TODO: Add the actual CREATE TABLE statement here when implementing.
--- Note: Add an index on (event_type, occurred_at) for efficient news feed queries.
--- Note: Add a spatial index or PostGIS geometry column on the location fields
---       if geographic queries become a performance bottleneck.
+CREATE TABLE wildlife_events (
+    id              BIGSERIAL PRIMARY KEY,
+    event_type      TEXT NOT NULL CHECK (event_type IN ('stocking', 'regulation_change', 'water_advisory', 'population_survey', 'invasive_species')),
+    title           TEXT NOT NULL,
+    description     TEXT NOT NULL,
+    source_agency   TEXT NOT NULL,
+    source_url      TEXT NOT NULL UNIQUE,
+    latitude        DOUBLE PRECISION NOT NULL,
+    longitude       DOUBLE PRECISION NOT NULL,
+    radius_km       DOUBLE PRECISION NOT NULL,
+    water_body_name TEXT,
+    stocked_species TEXT,
+    stocked_count   BIGINT,
+    occurred_at     TIMESTAMPTZ NOT NULL,
+    ingested_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_wildlife_events_type_occurred ON wildlife_events (event_type, occurred_at DESC);
+CREATE INDEX idx_wildlife_events_location      ON wildlife_events (latitude, longitude);

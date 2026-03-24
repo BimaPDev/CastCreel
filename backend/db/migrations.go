@@ -94,7 +94,7 @@ func getMigrationFiles() ([]string, error) {
 	files := []string{}
 	for _, entry := range dir {
 		if strings.HasSuffix(entry.Name(), ".sql") {
-			files = append(files, entry.Name())
+			files = append(files, filepath.Join("db/migrations", entry.Name()))
 		}
 	}
 	sort.Strings(files)

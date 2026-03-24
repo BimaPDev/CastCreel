@@ -1,11 +1,14 @@
--- Migration 007: Create the groups table
---
--- Groups are communities of anglers who share catches with each other.
--- This table stores the group's identity and settings. Membership rows
--- live in the separate group_members table (migration 008).
---
--- TODO: Add the actual CREATE TABLE statement here when implementing.
--- Note: Add a foreign key from created_by to users(id).
--- Note: Add a unique index on invite_code so the lookup in JoinByInviteCode is fast.
--- Note: Consider a GIN index on (name, description) for the full-text search
---       used by SearchPublicGroups.
+CREATE TABLE groups (
+    id           BIGSERIAL PRIMARY KEY,
+    name         TEXT NOT NULL,
+    description  TEXT NOT NULL DEFAULT '',
+    created_by   BIGINT NOT NULL REFERENCES users(id),
+    is_private   BOOLEAN NOT NULL DEFAULT FALSE,
+    invite_code  TEXT UNIQUE,
+    member_count INT NOT NULL DEFAULT 0,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_groups_invite_code ON groups (invite_code) WHERE invite_code IS NOT NULL;
+CREATE INDEX idx_groups_name ON groups USING GIN (to_tsvector('english', name || ' ' || description));

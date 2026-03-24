@@ -1,13 +1,7 @@
--- Migration 008: Create the group_members table
---
--- Records which users belong to which groups and at what role level.
--- Only accepted members appear here — pending join requests live in
--- the join_requests table (migration 009).
---
--- TODO: Add the actual CREATE TABLE statement here when implementing.
--- Note: The primary key should be the composite (group_id, user_id) —
---       a user can only have one membership row per group.
--- Note: Add foreign keys to groups(id) and users(id), both with ON DELETE CASCADE
---       so orphaned rows are automatically cleaned up.
--- Note: Add a check constraint on role to enforce the GroupRole enum values:
---       ('admin', 'moderator', 'member').
+CREATE TABLE group_members (
+    group_id  BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    user_id   BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role      TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'moderator', 'member')),
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (group_id, user_id)
+);

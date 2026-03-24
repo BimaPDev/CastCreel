@@ -1,9 +1,12 @@
--- Migration 001: Create the users table
---
--- This table stores every person who has registered an account.
--- It holds their login credentials (hashed password, never plain text),
--- their display name, home location for local news filtering,
--- their favorite species for personalized predictions,
--- and their push notification device token.
---
--- TODO: Add the actual CREATE TABLE statement here when implementing.
+CREATE TABLE users (
+    id               BIGSERIAL PRIMARY KEY,
+    email            TEXT NOT NULL UNIQUE,
+    username         TEXT NOT NULL UNIQUE,
+    password_hash    TEXT NOT NULL,
+    home_latitude    DOUBLE PRECISION,
+    home_longitude   DOUBLE PRECISION,
+    favorite_species TEXT[] NOT NULL DEFAULT '{}',
+    push_token       TEXT,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

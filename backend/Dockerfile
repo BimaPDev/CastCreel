@@ -24,6 +24,7 @@ RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 
 COPY --from=builder /app/castcreel-backend .
+COPY --from=builder /app/db/migrations ./db/migrations
 
 EXPOSE 8080
 
