@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -21,6 +20,24 @@ func RunMigrations(pool *pgxpool.Pool) error {
 
 	if err := ensureMigrationsTable(ctx, pool); err != nil {
 		return err
+	}
+
+	applied, err := getAppliedMigrations(ctx, pool)
+	if err != nil {
+		return err
+	}
+
+	files, err := getMigrationFiles()
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if !applied[file] {
+			if err := runSingleMigration(ctx, pool, file); err != nil {
+				return fmt.Errorf("running migration %s: %w", file, err)
+			}
+		}
 	}
 
 	return nil
@@ -91,19 +108,25 @@ func getMigrationFiles() ([]string, error) {
 func runSingleMigration(ctx context.Context, pool *pgxpool.Pool, filePath string) error {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("reading migration file: %w", err)
 	}
 	sqlContent := string(data)
 
 	tx, err := pool.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("reading migration file: %w", err)
+		return fmt.Errorf("beginning transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
-	tx.Exec(ctx,sqlContent)
-	tx.Exec(ctx, "INSERT INTO migrations(name) VALUES($1)", filePath)
-	tx.Commit(ctx)
-	return nil
+
+	if _, err := tx.Exec(ctx, sqlContent); err != nil {
+		return fmt.Errorf("executing migration: %w", err)
+	}
+
+	if _, err := tx.Exec(ctx, "INSERT INTO migrations(name) VALUES($1)", filePath); err != nil {
+		return fmt.Errorf("recording migration: %w", err)
+	}
+
+	return tx.Commit(ctx)
 }
 
 // Keep the compiler happy — these are used by the unexported helpers above.
