@@ -120,12 +120,53 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 // refresh token so it can't be used to get new access tokens anymore.
 // The access token itself will expire on its own schedule.
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		refresh_token string `json:"refresh_token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+    	respondError(w, http.StatusBadRequest, "invalid request body")
+    	return
+	}
+	if req.refresh_token == "" {
+		respondError(w, http.StatusBadRequest, "Token Empty")
+    	return
+	}
+	
 }
 
 // RefreshToken handles a request to swap an expired access token for a new one.
 // The user sends their refresh token; if it's still valid, we send back a
 // fresh access token without making them type their password again.
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.RefreshToken == "" {
+        respondError(w, http.StatusBadRequest, "refresh_token required")
+        return
+    }
+
+	claims, err := h.parseToken(req.RefreshToken)
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid or expired refresh token")
+	}
+
+	userID, err := strconv.ParseInt(claims.Subject, 10, 64)
+	if err != nil {
+        respondError(w, http.StatusUnauthorized, "invalid token subject")
+        return
+    }
+
+	accessToken, refreshToken, err := h.generateTokenPair(userID)
+    if err != nil {
+        respondError(w, http.StatusInternalServerError, "could not generate token")
+        return
+    }
+	respondJSON(w, http.StatusOK, map[string]string{
+        "access_token":  accessToken,
+        "refresh_token": refreshToken,
+    })
 }
 
 // generateTokenPair creates both an access token and a refresh token for a user.
